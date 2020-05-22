@@ -16,3 +16,5 @@ if(nrow(left) > 0){
   third_set <- c(rep(NA, how_many-nrow(left)), left$Name)
   matches$Colleague_3 <- sample(third_set, how_many)
 }
+
+write_csv(matches, paste0("matches/matches_",lubridate::today(),".csv"))
