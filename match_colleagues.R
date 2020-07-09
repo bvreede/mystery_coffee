@@ -24,8 +24,13 @@ remove_previous <- function(name, participants){
 df <- read_csv("data/collegas_continued.csv")
 existing <- read_csv("matches/allmatches.csv")
 
+# remove the week from six weeks ago
+existing <- existing %>%
+  select(-starts_with("22_Match"))
+
+
 # select participants for this week
-participants = df %>% filter(!is.na(Week_28)) %>% pull(Name)
+participants = df %>% filter(!is.na(Week_29)) %>% pull(Name)
 
 # make the data frame to fill in
 matches <- NULL
@@ -45,8 +50,7 @@ while(length(participants) > 1){
   matches <- rbind(matches, c(name,match))
 }
 
-names(matches) <- c("first", "second") # why does this not survive as_tibble?
-matches <- as_tibble(matches)
+matches <- as.data.frame(matches)
 names(matches) <- c("first", "second")
 
 # last match
@@ -62,3 +66,26 @@ matches <- matches %>%
 }
 
 write_csv(matches, paste0("matches/matches_",lubridate::today(),".csv"))
+
+
+# add matches to the previous matches document
+first <- matches %>%
+  rename(Colleague = first,
+         match = second)
+
+second <- matches %>%
+  rename(Colleague = second,
+         match = first)
+
+matches_for_existing <- bind_rows(first,second) %>%
+  rename(`29_Match1` = match)
+
+# TODO: if there is a three-person match, the third needs to be added
+# if(ncol(matches) > 2){
+#   
+# }
+
+
+existing <- full_join(existing, matches_for_existing, by="Colleague")
+
+write_csv(existing, "matches/allmatches.csv")
