@@ -3,8 +3,7 @@
 .RData
 .Ruserdata
 .DS_Store
-data/
 matches/
 old_scripts/
-!data/testdata_colleagues.csv
-!data/testdata_matches.csv
+data/realdata_colleagues.csv
+data/realdata_matches.csv
