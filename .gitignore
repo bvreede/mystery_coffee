@@ -2,6 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
+.DS_Store
 data/
 matches/
-!data/testdata.csv
+old_scripts/
+!data/testdata_colleagues.csv
+!data/testdata_matches.csv
