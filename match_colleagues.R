@@ -1,10 +1,10 @@
 library(tidyverse)
 
 # running variable: use "test" for test data, "real" for real data, if present
-running <- "test" # "real"
+running <- "real" # "real"
 
 # week number
-weekno <- 48
+weekno <- 42
 
 
 
@@ -31,7 +31,7 @@ remove_previous <- function(name, participants){
 
 divide_participants <- function(participants){
   # make the data frame to fill in
-  matches <- NULL
+  matchdata <- NULL
   while(length(participants) > 1){
     # draw name 1
     name <- base::sample(participants, 1)
@@ -42,28 +42,28 @@ divide_participants <- function(participants){
     # remove from participants
     participants <- participants[!participants %in% c(name,match)]
     # save to df
-    matches <- rbind(matches, c(name,match))
+    matchdata <- rbind(matchdata, c(name,match))
   }
   
-  matches <- as.data.frame(matches)
-  names(matches) <- c("first", "second")
+  matchdata <- as.data.frame(matchdata)
+  names(matchdata) <- c("first", "second")
   
   # last match
   if(length(participants > 0)){
     name <- participants[1]
     previous <- previous_matches(name)
     
-    matches <- matches %>%
+    matchdata <- matchdata %>%
       mutate(
         third = case_when(!first %in% previous & !second %in% previous ~ name),
         third = case_when(!duplicated(third) ~ third)
       )
     # if the last match did not find a good spot...
-    if(!name%in%matches$third){
+    if(!name%in%matchdata$third){
       stop(paste0("Could not find a good group for last remaining participant, ", name, "."))
     }
   }
-  return(matches)
+  return(matchdata)
 }
 
 
@@ -90,15 +90,19 @@ participants <- df %>%
 participants <- participants[,"Name"][!is.na(participants[,2])] %>% unname()
 
 # TODO: this simply does not create matches but does not rerun the function if there is an error.
-tryCatch({matches <- divide_participants(participants)},
-         error = function(e){print(e)})
+matchdata <- NULL
+while(is.null(matchdata)){
+  tryCatch({matchdata <- divide_participants(participants)},
+          error = function(e){print(e)})
+}
+
 
 
 # make directory if it does not yet exists
 if(!dir.exists("matches")){
   dir.create("matches")
 }
-write_csv(matches, paste0("matches/matches_",lubridate::today(),".csv"))
+write_csv(matchdata, paste0("matches/matches_",lubridate::today(),".csv"))
 
 
 # this week's match name
@@ -106,11 +110,11 @@ thisweek1 <- paste0(weekno,"_Match1")
 thisweek2 <- paste0(weekno,"_Match2")
 
 # add matches to the previous matches document
-first <- matches %>%
+first <- matchdata %>%
   rename(Colleague = first,
          match = second)
 
-second <- matches %>%
+second <- matchdata %>%
   rename(Colleague = second,
          match = first)
 
@@ -118,11 +122,11 @@ matches_for_existing <- bind_rows(first,second) %>%
   rename(!!thisweek1 := match)
 
 # if there is one set of three, a second column needs to be added
-if(ncol(matches) > 2){
+if(ncol(matchdata) > 2){
   matches_for_existing <- matches_for_existing %>%
     rename(!!thisweek2 := third)
   
-  third_match <- matches %>%
+  third_match <- matchdata %>%
     filter(!is.na(third)) %>%
     rename(Colleague = third,
            !!thisweek1 := first,
@@ -138,7 +142,7 @@ if(running == "test"){
   cat(paste0("Saving the matches with TEST data."))
   write_csv(existing, "data/testdata_matches.csv")
 } else if(running == "real"){
-  cat(paste0("Saving the matches with TEST data."))
+  cat(paste0("Saving the matches with REAL data."))
   write_csv(existing, "data/realdata_matches.csv")
 } else{
   stop("Make a choice between 'real' and 'test' in the variable 'running'.")
