@@ -4,7 +4,7 @@ library(tidyverse)
 running <- "real" # "real"
 
 # week number
-weekno <- 42
+weekno <- 43
 
 
 
