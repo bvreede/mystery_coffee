@@ -8,3 +8,4 @@ old_scripts/
 data/realdata_colleagues.csv
 data/realdata_matches.csv
 *.dat
+*.pdf
