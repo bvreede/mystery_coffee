@@ -154,10 +154,10 @@ existing <- full_join(existing, matches_for_existing, by="Colleague")
 # save the matches to 'existing matches' data
 if(running == "test"){
   cat(paste0("Saving the matches with TEST data."))
-  write_csv(existing, "data/testdata_matches.csv")
+  write_csv2(existing, "data/testdata_matches.csv")
 } else if(running == "real"){
   cat(paste0("Saving the matches with REAL data."))
-  write_csv(existing, "data/realdata_matches.csv")
+  write_csv2(existing, "data/realdata_matches.csv")
 } else{
   stop("Make a choice between 'real' and 'test' in the variable 'running'.")
 }
