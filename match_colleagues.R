@@ -1,7 +1,8 @@
 library(tidyverse)
+library(googlesheets4)
 
 # running variable: use "test" for test data, "real" for real data, if present
-running <- "test" # "real"
+running <- "real" # "real"
 
 # week number
 weekno <- 3
@@ -14,7 +15,7 @@ weekno <- 3
 ###### FUNCTIONS ######
 load_user_data <- function(type = "real"){
   url_test <- "https://docs.google.com/spreadsheets/d/1I-8IG0FqaIGwx7ZVEbbTXzshXbvJUM6kOHk2y3eA528/"
-  url_real <- ""
+  url_real <- "https://docs.google.com/spreadsheets/d/1cdpBF8Nk-Q8QBFPoxXBbADqjyjuIhbMGZv9HBjR5lRk/"
     if(type == "real"){
       df <- read_sheet(url_real)
     }else if(type == "test"){
