@@ -1,14 +1,30 @@
 library(tidyverse)
 
 # running variable: use "test" for test data, "real" for real data, if present
-running <- "real" # "real"
+running <- "test" # "real"
 
 # week number
-weekno <- 43
+weekno <- 3
+
+
+  
 
 
 
 ###### FUNCTIONS ######
+load_user_data <- function(type = "real"){
+  url_test <- "https://docs.google.com/spreadsheets/d/1I-8IG0FqaIGwx7ZVEbbTXzshXbvJUM6kOHk2y3eA528/"
+  url_real <- ""
+    if(type == "real"){
+      df <- read_sheet(url_real)
+    }else if(type == "test"){
+      df <- read_sheet(url_test)  
+    }else{
+      stop("No valid option given (function load_user_data()).")
+    }
+  return(df)
+}
+
 previous_matches <- function(name){
   previous <- existing %>% 
     filter(Colleague == name) %>%
@@ -46,7 +62,7 @@ divide_participants <- function(participants){
   }
   
   matchdata <- as.data.frame(matchdata)
-  names(matchdata) <- c("first", "second")
+  names(matchdata) <- c("Collega_1", "Collega_2")
   
   # last match
   if(length(participants > 0)){
@@ -55,11 +71,11 @@ divide_participants <- function(participants){
     
     matchdata <- matchdata %>%
       mutate(
-        third = case_when(!first %in% previous & !second %in% previous ~ name),
-        third = case_when(!duplicated(third) ~ third)
+        Collega_3 = case_when(!Collega_1 %in% previous & !Collega_2 %in% previous ~ name),
+        Collega_3 = case_when(!duplicated(Collega_3) ~ Collega_3)
       )
     # if the last match did not find a good spot...
-    if(!name%in%matchdata$third){
+    if(!name%in%matchdata$Collega_3){
       stop(paste0("Could not find a good group for last remaining participant, ", name, "."))
     }
   }
@@ -70,13 +86,13 @@ divide_participants <- function(participants){
 ###### PIPELINE ######
 
 # read in the data
+df <- load_user_data(type = running)
+
 if(running == "test"){
   cat(paste0("Running the colleague matching script with TEST data for week ",weekno,".\n"))
-  df <- read_csv("data/testdata_colleagues.csv")
   existing <- read_csv("data/testdata_matches.csv")
 } else if(running == "real"){
   cat(paste0("Running the colleague matching script with REAL data for week ",weekno,".\n"))
-  df <- read_csv("data/realdata_colleagues.csv")
   existing <- read_csv("data/realdata_matches.csv")
 } else{
   stop("Make a choice between 'real' and 'test' in the variable 'running'.")
@@ -89,14 +105,11 @@ participants <- df %>%
   select(Name, contains(as.character(weekno)))
 participants <- participants[,"Name"][!is.na(participants[,2])] %>% unname()
 
-# TODO: this simply does not create matches but does not rerun the function if there is an error.
 matchdata <- NULL
 while(is.null(matchdata)){
   tryCatch({matchdata <- divide_participants(participants)},
           error = function(e){print(e)})
 }
-
-
 
 # make directory if it does not yet exists
 if(!dir.exists("matches")){
@@ -110,27 +123,27 @@ thisweek1 <- paste0(weekno,"_Match1")
 thisweek2 <- paste0(weekno,"_Match2")
 
 # add matches to the previous matches document
-first <- matchdata %>%
-  rename(Colleague = first,
-         match = second)
+Collega_1 <- matchdata %>%
+  rename(Colleague = Collega_1,
+         match = Collega_2)
 
-second <- matchdata %>%
-  rename(Colleague = second,
-         match = first)
+Collega_2 <- matchdata %>%
+  rename(Colleague = Collega_2,
+         match = Collega_1)
 
-matches_for_existing <- bind_rows(first,second) %>%
+matches_for_existing <- bind_rows(Collega_1,Collega_2) %>%
   rename(!!thisweek1 := match)
 
 # if there is one set of three, a second column needs to be added
 if(ncol(matchdata) > 2){
   matches_for_existing <- matches_for_existing %>%
-    rename(!!thisweek2 := third)
+    rename(!!thisweek2 := Collega_3)
   
   third_match <- matchdata %>%
-    filter(!is.na(third)) %>%
-    rename(Colleague = third,
-           !!thisweek1 := first,
-           !!thisweek2 := second)
+    filter(!is.na(Collega_3)) %>%
+    rename(Colleague = Collega_3,
+           !!thisweek1 := Collega_1,
+           !!thisweek2 := Collega_2)
   
   matches_for_existing <- bind_rows(matches_for_existing,third_match)
 }
