@@ -5,7 +5,6 @@
 .DS_Store
 matches/
 old_scripts/
-data/realdata_colleagues.csv
-data/realdata_matches.csv
+data/realdata*
 *.dat
 *.pdf
